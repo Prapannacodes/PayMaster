@@ -1,4 +1,6 @@
-require("dotenv").config({ path: "../.env" });
+const path = require("path");
+require("dotenv").config();
+require("dotenv").config({ path: path.join(__dirname, "../.env") });
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
@@ -10,11 +12,13 @@ const { SalaryAnomaly, SalaryDiscrepancy } = require("../models/intelligentPayro
 
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/salary_management";
 
-async function seedDatabase() {
+async function seedDatabase(shouldExit = true) {
   try {
-    console.log("Connecting to MongoDB...");
-    await mongoose.connect(MONGO_URI);
-    console.log("MongoDB connected for seeding.");
+    if (mongoose.connection.readyState !== 1) {
+      console.log("Connecting to MongoDB...");
+      await mongoose.connect(MONGO_URI);
+      console.log("MongoDB connected for seeding.");
+    }
 
     // Clean existing data for clean reset if needed
     await User.deleteMany({});
@@ -527,11 +531,21 @@ async function seedDatabase() {
     console.log("Employee: rahul@salary.com / password123");
     console.log("=========================================");
 
-    process.exit(0);
+    if (shouldExit) {
+      process.exit(0);
+    }
+    return { success: true, message: "Database seeded successfully" };
   } catch (error) {
     console.error("Seeding failed:", error);
-    process.exit(1);
+    if (shouldExit) {
+      process.exit(1);
+    }
+    throw error;
   }
 }
 
-seedDatabase();
+if (require.main === module) {
+  seedDatabase(true);
+}
+
+module.exports = { seedDatabase };

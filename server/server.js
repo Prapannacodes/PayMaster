@@ -24,6 +24,20 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+// Manual database seed endpoint
+app.get("/api/seed-database", async (req, res) => {
+  try {
+    const { seedDatabase } = require("./init/seed");
+    await seedDatabase(false);
+    res.json({
+      success: true,
+      message: "Database seeded successfully with default Admin, HR, and Employee demo accounts!"
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // 4 Core Domain Routers + Intelligent Enhancement Routers
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api", require("./routes/employeeRoutes"));
